@@ -10,18 +10,17 @@ use warnings;
 use Moose;
 with (
     'Dist::Zilla::Role::FileGatherer',
-    'Dist::Zilla::Role::PrereqSource',
     'Dist::Zilla::Role::MetaProvider',
 );
 
 use App::lcpan::Call qw(call_lcpan_script);
-use Dist::Zilla::Util::ParsePrereqsFromDistIni qw(parse_prereqs_from_dist_ini);
 use File::Slurper qw(read_binary);
 use Module::Path::More qw(module_path);
 
+has module => (is=>'rw');
 has include_author => (is=>'rw');
 
-sub mvp_multivalue_args { qw(include_author) }
+sub mvp_multivalue_args { qw(include_author add_requires) }
 
 use namespace::autoclean;
 
@@ -30,17 +29,9 @@ sub gather_files {
 
     my $self = shift;
 
-    # we cannot use this method because at this early stage, prereqs has not
-    # been filled. we need to parse prereqs directly from dist.ini
-    #my $prereqs_hash = $self->zilla->prereqs->as_string_hash;
-    my $prereqs_hash = parse_prereqs_from_dist_ini(path=>"dist.ini");
+    my $modules = $self->module or return;
 
-    my $runtime_requires = $prereqs_hash->{runtime}{requires} or return;
-
-    my $res = call_lcpan_script(
-        argv => ['deps', '-R',
-                 grep {$_ ne 'perl'} keys %$runtime_requires],
-    );
+    my $res = call_lcpan_script(argv => ['deps', '-R', @$modules]);
 
     my %add_mods = %{ $runtime_requires }; # to be added in our dist
     my %dep_mods; # to stay as deps
@@ -103,20 +94,6 @@ sub gather_files {
     for my $mod (keys %dep_mods) {
         $self->zilla->register_prereqs($mod => $dep_mods{$mod});
     }
-
-    $self->{_orig_runtime_requires} = $runtime_requires;
-}
-
-sub register_prereqs {
-    my $self = shift;
-
-    # remove the original "runtime requires" prereqs
-    my $reqs = $self->zilla->prereqs->requirements_for('runtime', 'requires');
-    for my $mod (keys %{ $self->{_orig_runtime_requires} }) {
-        $self->log_debug(['Removing original prereq: %s', $mod]);
-        $reqs->clear_requirement($mod);
-    }
-
 }
 
 sub metadata {
@@ -138,33 +115,31 @@ In C<dist.ini>:
  name=Perinci-CmdLine-Any-Bundled
  version=0.01
 
- [Prereqs]
- Perinci::CmdLine::Any=0
-
  [PERLANCAR::AddDeps]
  include_author = PERLANCAR
+ module = Perinci::CmdLine::Any
 
 
 =head1 DESCRIPTION
 
 B<WARNING: EXPERIMENTAL>
 
-This plugin will add module files from dependencies into your dist during
-building. When done carefully, can reduce the number of dists that users need to
-install because they are already included in your dists.
+This plugin will add module files along with their recursive dependencies into
+your dist during building. When done carefully, this can reduce the number of
+dists that users need to download and install because they are already included
+in your dists.
 
 =head2 How it works
 
-1. Perform "lcpan deps -R" against the "runtime requires" dependencies of your
-dist. This basically queries your local CPAN index and ask for the recursive
-dependencies of the modules. You can filter this using C<include_author> to
-include only dependencies written by a certain author (for example, yourself).
-The result is a list of modules to add into dist (#1a) and a list of modules to
-stay as deps (#1b).
+1. Perform "lcpan deps -R" against all the modules specified in C<module>
+configuration. This basically queries your local CPAN index and ask for the
+recursive dependencies of the modules. You can filter this using
+C<include_author> to include only dependencies written by a certain author (for
+example, yourself). The result is a list of modules to add into dist (#1a) and a
+list of modules to stay as deps (#1b).
 
-2. Perform "lcpan mods-from-same-dist" for all modules found in #1a + the
-"runtime requires" itself. The result is all modules from all dependency
-distributions.
+2. Perform "lcpan mods-from-same-dist" for all modules found in #1a. The result
+is all modules from all dependency distributions.
 
 3. Search all the module files found in #2 in your local installation and
 include them to Dist::Zilla for building. Some minor modifications will be done
@@ -191,8 +166,6 @@ then the text will be replaced with:
 original dists.
 
 5. Add modules in #1b as dependencies.
-
-6. Remove the original "runtime requires" from dependencies.
 
 =head2 Caveats
 
