@@ -3,7 +3,7 @@ package Dist::Zilla::Plugin::PERLANCAR::AddDeps;
 # DATE
 # VERSION
 
-use 5.010;
+use 5.010001;
 use strict;
 use warnings;
 
@@ -67,7 +67,7 @@ sub gather_files {
     $self->log_debug(["modules to add into dist: %s", \%add_mods]);
     $self->log_debug(["modules to add as deps: %s", \%dep_mods]);
 
-    my $meta_no_index => {};
+    my $meta_no_index = {};
 
     $res = call_lcpan_script(argv=>["mods-from-same-dist", keys %add_mods]);
     for my $mod (@{ $res }) {
