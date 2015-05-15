@@ -143,13 +143,15 @@ install because they are already included in your dists.
 dist. This basically queries your local CPAN index and ask for the recursive
 dependencies of the modules. You can filter this using C<include_author> to
 include only dependencies written by a certain author (for example, yourself).
-The result is a list of modules.
+The result is a list of modules to add into dist (#1a) and a list of modules to
+stay as deps (#1b).
 
-2. Perform "lcpan mods-from-same-dist" for all modules found in #1. The result
+2. Perform "lcpan mods-from-same-dist" for all modules found in #1a. The result
 is all modules from all dependency distributions.
 
-3. Search all the modules found in #2 in your local installation and include
-them to Dist::Zilla for building. Some minor modifications will be done first:
+3. Search all the module files found in #2 in your local installation and
+include them to Dist::Zilla for building. Some minor modifications will be done
+first:
 
 =over
 
@@ -167,6 +169,11 @@ then the text will be replaced with:
  distribution Perinci-CmdLine-Any-Bundled version 0.01), released on 2015-04-12.
 
 =back
+
+4. Add all files in #3 into no_index metadata, so they don't clash with the
+original dists.
+
+5. Add modules in #1b as dependencies.
 
 =head2 Caveats
 
