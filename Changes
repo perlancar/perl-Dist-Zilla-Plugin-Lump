@@ -1,5 +1,14 @@
 Revision history for Dist-Zilla-PERLANCAR-AddDeps
 
+0.04    2015-05-15 (PERLANCAR)
+
+        [INCOMPATIBLE CHANGES]
+
+        - To avoid the added modules being in the prereqs themselves, now the
+          modules to be added are specified in the 'modules' plugin
+          configuration instead of in the Prereqs section.
+
+
 0.03    2015-05-15 (PERLANCAR)
 
 	- No functional changes.

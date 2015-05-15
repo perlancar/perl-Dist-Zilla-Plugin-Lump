@@ -33,7 +33,7 @@ sub gather_files {
 
     my $res = call_lcpan_script(argv => ['deps', '-R', @$modules]);
 
-    my %add_mods = %{ $runtime_requires }; # to be added in our dist
+    my %add_mods; # to be added in our dist
     my %dep_mods; # to stay as deps
     for my $rec (@$res) {
         my $add = 0;
