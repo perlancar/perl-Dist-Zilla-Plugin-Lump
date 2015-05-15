@@ -10,6 +10,7 @@ use warnings;
 use Moose;
 with (
     'Dist::Zilla::Role::FileGatherer',
+    'Dist::Zilla::Role::PrereqSource',
     'Dist::Zilla::Role::MetaProvider',
 );
 
@@ -41,7 +42,7 @@ sub gather_files {
                  grep {$_ ne 'perl'} keys %$runtime_requires],
     );
 
-    my %add_mods; # to be added in our dist
+    my %add_mods = %{ $runtime_requires }; # to be added in our dist
     my %dep_mods; # to stay as deps
     for my $rec (@$res) {
         my $add = 0;
@@ -102,10 +103,25 @@ sub gather_files {
     for my $mod (keys %dep_mods) {
         $self->zilla->register_prereqs($mod => $dep_mods{$mod});
     }
+
+    $self->{_orig_runtime_requires} = $runtime_requires;
+}
+
+sub register_prereqs {
+    my $self = shift;
+
+    # remove the original "runtime requires" prereqs
+    my $reqs = $self->zilla->prereqs->requirements_for('runtime', 'requires');
+    for my $mod (keys %{ $self->{_orig_runtime_requires} }) {
+        $self->log_debug(['Removing original prereq: %s', $mod]);
+        $reqs->clear_requirement($mod);
+    }
+
 }
 
 sub metadata {
     my $self = shift;
+
     { no_index => $self->{_meta_no_index} };
 }
 
@@ -146,8 +162,9 @@ include only dependencies written by a certain author (for example, yourself).
 The result is a list of modules to add into dist (#1a) and a list of modules to
 stay as deps (#1b).
 
-2. Perform "lcpan mods-from-same-dist" for all modules found in #1a. The result
-is all modules from all dependency distributions.
+2. Perform "lcpan mods-from-same-dist" for all modules found in #1a + the
+"runtime requires" itself. The result is all modules from all dependency
+distributions.
 
 3. Search all the module files found in #2 in your local installation and
 include them to Dist::Zilla for building. Some minor modifications will be done
@@ -174,6 +191,8 @@ then the text will be replaced with:
 original dists.
 
 5. Add modules in #1b as dependencies.
+
+6. Remove the original "runtime requires" from dependencies.
 
 =head2 Caveats
 
