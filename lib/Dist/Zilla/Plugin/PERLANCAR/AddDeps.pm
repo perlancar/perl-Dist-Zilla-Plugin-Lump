@@ -20,7 +20,7 @@ use Module::Path::More qw(module_path);
 has module => (is=>'rw');
 has include_author => (is=>'rw');
 
-sub mvp_multivalue_args { qw(include_author add_requires) }
+sub mvp_multivalue_args { qw(include_author module) }
 
 use namespace::autoclean;
 
