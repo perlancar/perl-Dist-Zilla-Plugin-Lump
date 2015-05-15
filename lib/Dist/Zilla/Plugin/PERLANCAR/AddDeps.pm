@@ -84,7 +84,7 @@ sub gather_files {
       MUNGE:
         {
             # adjust dist name
-            $ct =~ s/^(=head1 VERSION\s+[^\n]+from Perl distribution )([\w-]+)/
+            $ct =~ s/^(=head1 VERSION\s+[^\n]+from Perl distribution )[\w-]+(?: version [^)\s]+)*/
                 $1 . $self->zilla->name . " version " . $self->zilla->version/ems;
         }
 
