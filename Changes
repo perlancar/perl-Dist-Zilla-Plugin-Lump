@@ -10,7 +10,7 @@ Revision history for Dist-Zilla-Lump
           'lump_dist_and_deps'.
 
         - Munge files, replace #LUMP_MODULES and #LUMP_DISTS with 'our
-          @LUMP_MODULES = ...' and 'our @LUMPED_DIST = ...' to help other tools
+          @LUMP_MODULES = ...' and 'our @LUMPED_DISTS = ...' to help other tools
           (e.g. lint-prereqs) know the lumped contents.
 
 
