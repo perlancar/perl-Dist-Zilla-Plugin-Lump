@@ -225,16 +225,17 @@ In your main module, e.g. L<lib/Perinci/CmdLine/Any/Lumped.pm>:
 
 B<WARNING: EXPERIMENTAL>
 
-This plugin will add one or more module files to your dist during building. When
-done carefully, this can reduce the number of dists that users need to download
-and install because they are already included in your dists.
+This plugin will lump (add together) one or more module files to your dist
+during building. When done carefully, this can reduce the number of dists that
+users need to download and install because they are already included in your
+dists.
 
-The module file(s) to be added must be indexed on (local) CPAN and installed on
-your local Perl installation (as they will be copied from the installed version
-on your local installation). They will thus be contained in their original
-distributions as well as on your lump dist. To avoid conflict, the lumped files
-on your lump dist will be excluded from indexing (using C<no_index> in CPAN
-META) so PAUSE does not see them.
+The module file(s) to be added must be indexed on (your local) CPAN and
+installed on your local Perl installation, as they will be copied from the
+installed version on your local installation. They will thus be contained in
+their original distributions as well as on your lump dist. To avoid conflict,
+the lumped files on your lump dist will be excluded from indexing (using
+C<no_index> <file> in CPAN META) so PAUSE does not index them.
 
 
 =head2 How it works
@@ -288,6 +289,42 @@ installation. (This is purely out of my coding laziness though. It could/should
 be extracted from the release file in local CPAN index though.)
 
 =item *
+
+Aside from adding the module files, your main module (which should be named
+Something::Lumped) should contain these directives:
+
+ # LUMPED_MODULES
+ # LUMPED_DISTS
+
+During building, the plugin will replace those directives with:
+
+ our @LUMPED_MODULES = (...); # LUMPED_MODULES
+ our @LUMPED_DISTS = (...); # LUMPED_DISTS
+
+The C<@LUMPED_MODULES> array contains all the modules (packages) that are lumped
+in this lump dist. The purpose of this variable is to help tools like
+L<lint-prereqs>. C<Lint-prereqs> is a tool to warn if you
+underspecify/overspecify prereqs in C<dist.ini>. If you put a lump module (e.g.
+C<Something::Lumped>) as a prereq, L<lint-prereqs> can load the module and read
+the C<@LUMPED_MODULES> variable to see what other modules are lumped together in
+the lump dist. When you also specify one of those modules as prereqs,
+C<lint-prereqs> can warn you that it is not necessary, since that module has
+already been included in the lump dist.
+
+Similarly, C<@LUMPED_DISTS> array contains all the dists that are lumped in this
+lump dist. The purpose of this variable is to help tools like
+L<Dist::Zilla::Plugin::PERLANCAR::CheckDepDists>. This plugin will look for all
+lump dists on the local installation (via searching for modules ending with
+C<::Lumped>). If one of the dists specified in C<@LUMPED_DISTS> is the dist
+currently being built, then the plugin will issue a notification that the
+corresponding lump dist will need to be rebuilt.
+
+=item *
+
+If the lump dist is to be converted into a package-manager-based package (e.g.
+deb or RPM), the package should have a Provides to all the dists that are lumped
+(C<@LUMPED_DISTS>) so they can conflict with the original distribution's
+packages. This is because the files do conflict.
 
 =back
 
