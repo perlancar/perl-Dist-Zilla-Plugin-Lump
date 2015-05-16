@@ -1,6 +1,13 @@
 Revision history for Dist-Zilla-Lump
 
-0.07    2015-05-15 (PERLANCAR) (unreleased)
+0.08    2015-05-16 (PERLANCAR)
+
+        - No functional changes.
+
+        - [doc] Document about @LUMPED_MODULES and @LUMPED_DISTS.
+
+
+0.07    2015-05-15 (PERLANCAR)
 
         - Rename dist from DZP-PERLANCAR-AddDeps to DZP-Lump.
 
@@ -9,9 +16,9 @@ Revision history for Dist-Zilla-Lump
         - Change configuration from 'module' to 'lump_dist' and
           'lump_dist_and_deps'.
 
-        - Munge files, replace #LUMP_MODULES and #LUMP_DISTS with 'our
-          @LUMP_MODULES = ...' and 'our @LUMPED_DISTS = ...' to help other tools
-          (e.g. lint-prereqs) know the lumped contents.
+        - Munge files, replace #LUMPED_MODULES and #LUMPED_DISTS with 'our
+          @LUMPED_MODULES = ...' and 'our @LUMPED_DISTS = ...' to help other
+          tools (e.g. lint-prereqs) know the lumped contents.
 
 
 0.06    2015-05-15 (PERLANCAR)
