@@ -170,8 +170,10 @@ sub munge_file {
     my $content = $file->content;
     my $munged = 0;
 
-    $munged++ if $content =~ s/^(#\s*LUMPED_MODULES)/"our \@LUMPED_MODULES = \@{" . dmp($self->{_lump_mods}) . "}; $1"/em;
-    $munged++ if $content =~ s/^(#\s*LUMPED_DISTS)/"our \@LUMPED_DISTS = \@{" . dmp($self->{_lump_dists}) . "}; $1"/em;
+    $munged++ if $content =~ s/^(#\s*LUMPED_MODULES)$/"our \@LUMPED_MODULES = \@{" . dmp($self->{_lump_mods} ) . "}; $1"/em;
+    $munged++ if $content =~ s/^(#\s*LUMPED_DISTS)$/  "our \@LUMPED_DISTS   = \@{" . dmp($self->{_lump_dists}) . "}; $1"/em;
+    $munged++ if $content =~ s/^(#\s*LUMPED_MODULES_POD)$/"=over\n\n" . join("", map { "=item * $_\n\n" } @{ $self->{_lump_mods}  }) . "=back\n\n"/em;
+    $munged++ if $content =~ s/^(#\s*LUMPED_DISTS_POD)$/  "=over\n\n" . join("", map { "=item * $_\n\n" } @{ $self->{_lump_dists} }) . "=back\n\n"/em;
     $file->content($content) if $munged;
 }
 
@@ -219,6 +221,47 @@ In your main module, e.g. L<lib/Perinci/CmdLine/Any/Lumped.pm>:
  # LUMPED_DISTS
 
  ...
+
+And in the built version the directives will be replaced with:
+
+ our @LUMPED_MODULES = (...); # LUMPED_MODULES
+ our @LUMPED_DISTS = (...); # LUMPED_DISTS
+
+You can also add in the POD area:
+
+ =head1 LIST OF LUMPED MODULES
+
+ # LUMPED_MODULES_POD
+
+ =head1 LIST OF LUMPED DISTS
+
+ # LUMPED_DISTS_POD
+
+And in the built version they will become:
+
+ =head1 LIST OF LUMPED MODULES
+
+ =over
+
+ =item * ...
+
+ =item * ...
+
+ ...
+
+ =back
+
+ =head1 LIST OF LUMPED DISTS
+
+ =over
+
+ =item * ...
+
+ =item * ...
+
+ ...
+
+ =back
 
 
 =head1 DESCRIPTION
