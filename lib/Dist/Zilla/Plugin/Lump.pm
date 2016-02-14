@@ -55,7 +55,9 @@ sub gather_files {
         }
         my $res = call_lcpan_script(
             argv=>["mods-from-same-dist", "--latest", @mods]);
-        for my $mod (@$res) {
+        $self->log_fatal(["Can't lcpan mods-from-same-dist: %s - %s", $res->[0], $res->[1]])
+            unless $res->[0] == 200;
+        for my $mod (@{$res->[2]}) {
             push @lump_mods, $mod unless $mod ~~ @lump_mods;
         }
     }
@@ -69,10 +71,14 @@ sub gather_files {
         }
         my $res = call_lcpan_script(
             argv=>["mods-from-same-dist", "--latest", @mods1]);
-        my @mods2 = @$res;
+        $self->log_fatal(["Can't lcpan mods-from-same-dist: %s - %s", $res->[0], $res->[1]])
+            unless $res->[0] == 200;
+        my @mods2 = @{$res->[2]};
         $res = call_lcpan_script(argv => ['deps', '-R', @$res]);
+        $self->log_fatal(["Can't lcpan deps: %s - %s", $res->[0], $res->[1]])
+            unless $res->[0] == 200;
         my @mods3;
-        for my $rec (@$res) {
+        for my $rec (@{$res->[2]}) {
             my $lump = 0;
             my $mod = $rec->{module};
             $mod =~ s/\A\s+//;
@@ -93,7 +99,9 @@ sub gather_files {
             }
         }
         $res = call_lcpan_script(argv => ['mods-from-same-dist', '--latest', @mods3]);
-        my @mods4 = @$res;
+        $self->log_fatal(["Can't lcpan mods-from-same-dist: %s - %s", $res->[0], $res->[1]])
+            unless $res->[0] == 200;
+        my @mods4 = @{$res->[2]};
 
         for my $mod (@mods2, @mods4) {
             push @lump_mods, $mod unless $mod ~~ @lump_mods;
@@ -105,8 +113,10 @@ sub gather_files {
     {
         last unless @lump_mods;
         my $res = call_lcpan_script(argv => ['mod2dist', @lump_mods]);
+        $self->log_fatal(["Can't lcpan mod2dist: %s - %s", $res->[0], $res->[1]])
+            unless $res->[0] == 200;
         if (@lump_mods == 1) {
-            push @lump_dists, $res;
+            push @lump_dists, $res->[2];
         } else {
             for (values %$res) {
                 push @lump_dists, $_ unless $_ ~~ @lump_dists;
